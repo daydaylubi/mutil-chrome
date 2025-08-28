@@ -59,6 +59,25 @@ chmod +x multi_chrome.sh
 | `-k <编号>` | 关闭指定编号的实例 | `./multi_chrome.sh -k 2` |
 | `-h` | 显示帮助信息 | `./multi_chrome.sh -h` |
 
+### 一键生成 macOS 应用（使用 Make）
+
+不想记命令行？用 `make` 一步生成并打开可双击的 `MultiChrome.app`：
+
+```bash
+make app              # 生成并打开 dist/MultiChrome.app
+make install          # 安装到 /Applications（可选）
+make uninstall        # 卸载（可选）
+make help             # 查看帮助
+
+# 自定义版本与标识符（可选）
+VERSION=1.0.0 IDENTIFIER=com.yourorg.multichrome make app
+```
+
+双击应用的体验：
+- 弹出菜单可选择：启动指定数量 / 启动指定编号 / 查看状态 / 关闭全部 / 关闭指定编号 / 帮助
+- 日志位置：`~/Library/Logs/MultiChrome/run.log`
+- 首次运行如提示来自未验证开发者：在 Finder 中右键 `MultiChrome.app` → 打开 → 再次打开
+
 ### 数据目录
 实例数据存储在：`~/Library/Application Support/Google/Chrome_Instance_<编号>/`
 
@@ -128,6 +147,25 @@ chmod +x multi_chrome.sh
 | `-k` | Close all instances | `./multi_chrome.sh -k` |
 | `-k <number>` | Close a specific numbered instance | `./multi_chrome.sh -k 2` |
 | `-h` | Show help information | `./multi_chrome.sh -h` |
+
+### Build a macOS App (Make-based)
+
+Prefer a double-clickable app? Use `make` to build and open `MultiChrome.app`:
+
+```bash
+make app              # Build and open dist/MultiChrome.app
+make install          # Install to /Applications (optional)
+make uninstall        # Uninstall (optional)
+make help             # Show Make targets
+
+# Optional customization
+VERSION=1.0.0 IDENTIFIER=com.yourorg.multichrome make app
+```
+
+When launched, the app shows a simple menu:
+- Start N instances / Start a specific index / Show status / Kill all / Kill one / Help
+- Logs: `~/Library/Logs/MultiChrome/run.log`
+- First launch may require: Finder → Right-click `MultiChrome.app` → Open → Open
 
 ### Data Directory
 Instance data is stored in: `~/Library/Application Support/Google/Chrome_Instance_<number>/`
