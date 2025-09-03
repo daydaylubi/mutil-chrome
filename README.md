@@ -38,6 +38,9 @@ chmod +x multi_chrome.sh
 # 启动指定编号的实例
 ./multi_chrome.sh -n 5
 
+# 启动指定编号区间的实例 (编号3-6)
+./multi_chrome.sh -r 3-6
+
 # 查看所有实例状态
 ./multi_chrome.sh -s
 
@@ -46,6 +49,9 @@ chmod +x multi_chrome.sh
 
 # 关闭指定实例
 ./multi_chrome.sh -k 2
+
+# 关闭指定编号区间的实例 (编号3-6)
+./multi_chrome.sh -K 3-6
 ```
 
 ### 命令选项详解
@@ -54,9 +60,11 @@ chmod +x multi_chrome.sh
 |------|------|------|
 | `<数量>` | 启动指定数量的实例 | `./multi_chrome.sh 5` |
 | `-n <编号>` | 启动指定编号的实例 | `./multi_chrome.sh -n 3` |
+| `-r <起始编号>-<结束编号>` | 启动指定编号区间的实例 | `./multi_chrome.sh -r 3-6` |
 | `-s` | 显示实例运行状态 | `./multi_chrome.sh -s` |
 | `-k` | 关闭所有实例 | `./multi_chrome.sh -k` |
 | `-k <编号>` | 关闭指定编号的实例 | `./multi_chrome.sh -k 2` |
+| `-K <起始编号>-<结束编号>` | 关闭指定编号区间的实例 | `./multi_chrome.sh -K 3-6` |
 | `-h` | 显示帮助信息 | `./multi_chrome.sh -h` |
 
 ### 一键生成 macOS 应用（使用 Make）
@@ -74,7 +82,7 @@ VERSION=1.0.0 IDENTIFIER=com.yourorg.multichrome make app
 ```
 
 双击应用的体验：
-- 弹出菜单可选择：启动指定数量 / 启动指定编号 / 查看状态 / 关闭全部 / 关闭指定编号 / 帮助
+- 弹出菜单可选择：启动指定数量 / 启动指定编号 / 启动区间编号 / 查看状态 / 关闭全部 / 关闭指定编号 / 关闭区间编号 / 帮助
 - 日志位置：`~/Library/Logs/MultiChrome/run.log`
 - 首次运行如提示来自未验证开发者：在 Finder 中右键 `MultiChrome.app` → 打开 → 再次打开
 
@@ -127,6 +135,9 @@ chmod +x multi_chrome.sh
 # Start a specific numbered instance
 ./multi_chrome.sh -n 5
 
+# Start instances in a specific range (numbered 3-6)
+./multi_chrome.sh -r 3-6
+
 # View status of all instances
 ./multi_chrome.sh -s
 
@@ -135,6 +146,9 @@ chmod +x multi_chrome.sh
 
 # Close a specific instance
 ./multi_chrome.sh -k 2
+
+# Close instances in a specific range (numbered 3-6)
+./multi_chrome.sh -K 3-6
 ```
 
 ### Command Options
@@ -143,9 +157,11 @@ chmod +x multi_chrome.sh
 |--------|-------------|---------|
 | `<number>` | Start specified number of instances | `./multi_chrome.sh 5` |
 | `-n <number>` | Start a specific numbered instance | `./multi_chrome.sh -n 3` |
+| `-r <start>-<end>` | Start instances in a specific range | `./multi_chrome.sh -r 3-6` |
 | `-s` | Show instance running status | `./multi_chrome.sh -s` |
 | `-k` | Close all instances | `./multi_chrome.sh -k` |
 | `-k <number>` | Close a specific numbered instance | `./multi_chrome.sh -k 2` |
+| `-K <start>-<end>` | Close instances in a specific range | `./multi_chrome.sh -K 3-6` |
 | `-h` | Show help information | `./multi_chrome.sh -h` |
 
 ### Build a macOS App (Make-based)
@@ -163,7 +179,7 @@ VERSION=1.0.0 IDENTIFIER=com.yourorg.multichrome make app
 ```
 
 When launched, the app shows a simple menu:
-- Start N instances / Start a specific index / Show status / Kill all / Kill one / Help
+- Start N instances / Start a specific index / Start range / Show status / Kill all / Kill one / Kill range / Help
 - Logs: `~/Library/Logs/MultiChrome/run.log`
 - First launch may require: Finder → Right-click `MultiChrome.app` → Open → Open
 

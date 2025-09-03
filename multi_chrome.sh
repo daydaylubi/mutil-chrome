@@ -18,15 +18,19 @@ show_usage() {
     echo "使用方法:"
     echo "  $SCRIPT_NAME <实例数量>            # 启动指定数量的 Chrome 实例"
     echo "  $SCRIPT_NAME -n <实例编号>         # 启动指定编号的 Chrome 实例"
+    echo "  $SCRIPT_NAME -r <起始编号>-<结束编号>  # 启动指定编号区间的 Chrome 实例"
     echo "  $SCRIPT_NAME -s                   # 显示当前运行的实例状态"
     echo "  $SCRIPT_NAME -k [实例编号]         # 关闭所有实例或指定实例"
+    echo "  $SCRIPT_NAME -K <起始编号>-<结束编号>  # 关闭指定编号区间的 Chrome 实例"
     echo "  $SCRIPT_NAME -h, --help           # 显示帮助信息"
     echo ""
     echo "示例:"
     echo "  $SCRIPT_NAME 3                    # 启动3个 Chrome 实例 (1-3)"
     echo "  $SCRIPT_NAME -n 2                 # 启动第2个 Chrome 实例"
+    echo "  $SCRIPT_NAME -r 3-6               # 启动第3到第6个 Chrome 实例"
     echo "  $SCRIPT_NAME -k                   # 关闭所有实例"
     echo "  $SCRIPT_NAME -k 2                 # 关闭第2个实例"
+    echo "  $SCRIPT_NAME -K 3-6               # 关闭第3到第6个 Chrome 实例"
     echo "  $SCRIPT_NAME -s                   # 查看实例状态"
     echo ""
     show_instances_status
@@ -132,6 +136,35 @@ kill_instance() {
     fi
 }
 
+# 关闭指定区间的实例
+kill_instance_range() {
+    local start=$1
+    local end=$2
+    
+    # 验证参数
+    if ! validate_range_numbers $start $end; then
+        return 1
+    fi
+    
+    echo "正在关闭 Chrome 实例 $start 到 $end..."
+    
+    local closed_count=0
+    local not_running_count=0
+    
+    for i in $(seq $start $end); do
+        if is_instance_running $i; then
+            pkill -f "Google Chrome.*Chrome_Instance_$i"
+            echo "已关闭实例 $i"
+            ((closed_count++))
+        else
+            echo "实例 $i 未在运行"
+            ((not_running_count++))
+        fi
+    done
+    
+    echo "关闭完成：成功关闭 $closed_count 个，$not_running_count 个未在运行，共 $(($end-$start+1)) 个实例"
+}
+
 # 清理未使用的实例目录
 cleanup_instances() {
     echo "正在扫描未使用的实例目录..."
@@ -165,6 +198,20 @@ validate_instance_number() {
     return 0
 }
 
+# 验证区间参数
+validate_range_numbers() {
+    local start=$1
+    local end=$2
+    if ! validate_instance_number $start || ! validate_instance_number $end; then
+        return 1
+    fi
+    if [ $start -gt $end ]; then
+        echo "错误：起始编号必须小于或等于结束编号"
+        return 1
+    fi
+    return 0
+}
+
 # 检查 Chrome 是否存在
 if [ ! -f "$CHROME_PATH" ]; then
     echo "错误：找不到 Chrome 可执行文件: $CHROME_PATH"
@@ -184,6 +231,10 @@ SINGLE_INSTANCE=0
 INSTANCE_NUM=0
 SHOW_STATUS=0
 KILL_INSTANCES=0
+KILL_RANGE_MODE=0
+RANGE_START=0
+RANGE_END=0
+RANGE_MODE=0
 
 # 解析命令行参数
 while [[ $# -gt 0 ]]; do
@@ -199,6 +250,46 @@ while [[ $# -gt 0 ]]; do
             fi
             SINGLE_INSTANCE=1
             INSTANCE_NUM=$2
+            shift
+            ;;
+        -r|--range)
+            if [ -z "$2" ]; then
+                echo "错误：-r 选项需要指定起始和结束编号，格式为 起始编号-结束编号"
+                exit 1
+            fi
+            # 解析起始和结束编号
+            if [[ $2 =~ ^([0-9]+)-([0-9]+)$ ]]; then
+                RANGE_START=${BASH_REMATCH[1]}
+                RANGE_END=${BASH_REMATCH[2]}
+                if [ $RANGE_START -gt $RANGE_END ]; then
+                    echo "错误：起始编号必须小于或等于结束编号"
+                    exit 1
+                fi
+                RANGE_MODE=1
+            else
+                echo "错误：-r 选项格式不正确，应为 起始编号-结束编号，例如 3-6"
+                exit 1
+            fi
+            shift
+            ;;
+        -K|--kill-range)
+            if [ -z "$2" ]; then
+                echo "错误：-K 选项需要指定起始和结束编号，格式为 起始编号-结束编号"
+                exit 1
+            fi
+            # 解析起始和结束编号
+            if [[ $2 =~ ^([0-9]+)-([0-9]+)$ ]]; then
+                RANGE_START=${BASH_REMATCH[1]}
+                RANGE_END=${BASH_REMATCH[2]}
+                if [ $RANGE_START -gt $RANGE_END ]; then
+                    echo "错误：起始编号必须小于或等于结束编号"
+                    exit 1
+                fi
+                KILL_RANGE_MODE=1
+            else
+                echo "错误：-K 选项格式不正确，应为 起始编号-结束编号，例如 3-6"
+                exit 1
+            fi
             shift
             ;;
         -s|--status)
@@ -233,6 +324,9 @@ elif [ $KILL_INSTANCES -eq 1 ]; then
     else
         kill_instance $INSTANCE_NUM
     fi
+elif [ $KILL_RANGE_MODE -eq 1 ]; then
+    # 区间关闭模式
+    kill_instance_range $RANGE_START $RANGE_END
 elif [ $SINGLE_INSTANCE -eq 1 ]; then
     if ! validate_instance_number $INSTANCE_NUM; then
         exit 1
@@ -244,6 +338,28 @@ elif [ $SINGLE_INSTANCE -eq 1 ]; then
     else
         exit 1
     fi
+elif [ $RANGE_MODE -eq 1 ]; then
+    # 区间启动模式
+    if ! validate_range_numbers $RANGE_START $RANGE_END; then
+        exit 1
+    fi
+    
+    echo "正在启动 Chrome 实例 $RANGE_START 到 $RANGE_END..."
+    
+    success_count=0
+    skip_count=0
+    
+    for i in $(seq $RANGE_START $RANGE_END); do
+        echo "启动 Chrome 实例 $i..."
+        if is_instance_running $i; then
+            echo "跳过：实例 $i 已经在运行中"
+            ((skip_count++))
+        elif create_chrome_instance $i; then
+            ((success_count++))
+        fi
+    done
+    
+    echo "启动完成：成功 $success_count 个，跳过 $skip_count 个，共 $(($RANGE_END-$RANGE_START+1)) 个实例"
 else
     if [ $NUM_INSTANCES -lt 1 ]; then
         show_usage

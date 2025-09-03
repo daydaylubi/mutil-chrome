@@ -29,15 +29,17 @@ fi
 
 choose_cmd() {
     /usr/bin/osascript <<'APPLESCRIPT'
-set cmdList to {"启动指定数量", "启动指定编号", "查看状态", "关闭全部", "关闭指定编号", "帮助"}
+set cmdList to {"启动指定数量", "启动指定编号", "启动区间编号", "查看状态", "关闭全部", "关闭指定编号", "关闭区间编号", "帮助"}
 set sel to choose from list cmdList with prompt "选择操作" default items {"启动指定数量"} OK button name "确定" cancel button name "取消" with title "MultiChrome"
 if sel is false then return ""
 set choice to item 1 of sel
 if choice is "启动指定数量" then return "count"
 if choice is "启动指定编号" then return "start_one"
+if choice is "启动区间编号" then return "start_range"
 if choice is "查看状态" then return "status"
 if choice is "关闭全部" then return "kill_all"
 if choice is "关闭指定编号" then return "kill_one"
+if choice is "关闭区间编号" then return "kill_range"
 return "help"
 APPLESCRIPT
 }
@@ -58,6 +60,16 @@ return txt
 APPLESCRIPT
 }
 
+prompt_range() {
+    /usr/bin/osascript <<'APPLESCRIPT'
+set startDlg to display dialog "输入起始实例编号 (1-999)" default answer "1" buttons {"取消", "确定"} default button "确定"
+set startNum to text returned of startDlg
+set endDlg to display dialog "输入结束实例编号 (1-999)" default answer "5" buttons {"取消", "确定"} default button "确定"
+set endNum to text returned of endDlg
+return startNum & "-" & endNum
+APPLESCRIPT
+}
+
 ACTION="$(choose_cmd || true)"
 
 if [[ -z "${ACTION}" ]]; then
@@ -73,6 +85,10 @@ case "${ACTION}" in
         N="$(prompt_instance || true)"
         if [[ -z "${N}" ]]; then exit 0; fi
         exec "${SCRIPT_PATH}" -n "${N}" >> "${LOG_FILE}" 2>&1 ;;
+    start_range)
+        RANGE="$(prompt_range || true)"
+        if [[ -z "${RANGE}" ]]; then exit 0; fi
+        exec "${SCRIPT_PATH}" -r "${RANGE}" >> "${LOG_FILE}" 2>&1 ;;
     status)
         OUTPUT="$(${SCRIPT_PATH} -s 2>&1)" || true
         printf "%s\n" "${OUTPUT}" >> "${LOG_FILE}"
@@ -91,6 +107,10 @@ APPLESCRIPT
         N="$(prompt_instance || true)"
         if [[ -z "${N}" ]]; then exit 0; fi
         exec "${SCRIPT_PATH}" -k "${N}" >> "${LOG_FILE}" 2>&1 ;;
+    kill_range)
+        RANGE="$(prompt_range || true)"
+        if [[ -z "${RANGE}" ]]; then exit 0; fi
+        exec "${SCRIPT_PATH}" -K "${RANGE}" >> "${LOG_FILE}" 2>&1 ;;
     help|*)
         HELP_OUT="$(${SCRIPT_PATH} -h 2>&1)" || true
         printf "%s\n" "${HELP_OUT}" >> "${LOG_FILE}"
